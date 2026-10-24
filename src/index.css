@@ -1,0 +1,278 @@
+:root {
+  background: linear-gradient(135deg, #090d16 0%, #0f172a 100%);
+  color: #f8fafc;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* 1. Main Background Layout Container */
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* Subtle glowing orb in background for depth */
+.app-container::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, transparent 70%);
+  top: 15%;
+  left: 20%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 2. Sleek Glassmorphic Core Dashboard Card */
+.timer-card {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 3rem 2.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 440px;
+  box-sizing: border-box;
+  z-index: 1;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 0;
+  margin-bottom: 2.5rem;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.icon-blue {
+  color: #38bdf8;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
+}
+
+/* 3. Form Typography & Inputs */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-label {
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  margin-bottom: 0.65rem;
+}
+
+.input-field {
+  background-color: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  margin-bottom: 1.75rem;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.input-field:focus {
+  border-color: #38bdf8;
+  background-color: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.number-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.75rem;
+}
+
+.number-input {
+  width: 100%;
+  margin-bottom: 0;
+  padding-right: 5rem;
+}
+
+.input-suffix {
+  position: absolute;
+  right: 1.25rem;
+  color: #475569;
+  font-size: 0.9rem;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.wide-input {
+  width: 100%;
+}
+
+/* 4. Action Buttons (Modern Gradient & Transitions) */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-start {
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.3);
+}
+
+.btn-start:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
+}
+
+.btn-start:active {
+  transform: translateY(1px);
+}
+
+/* 5. Active Countdown Display Panel */
+.countdown-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timer-digits {
+  font-size: 5.75rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin-bottom: 1.25rem;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.current-vibe {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #38bdf8;
+  background-color: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  padding: 0.65rem 1.25rem;
+  border-radius: 2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+  text-align: center;
+  max-width: 90%;
+}
+
+.playlist-link {
+  color: #a78bfa;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.15s ease;
+}
+
+.playlist-link:hover {
+  color: #c084fc;
+  text-decoration: underline;
+}
+
+.btn-stop {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  padding: 0.85rem 2.25rem;
+}
+
+.btn-stop:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+}
+
+/* 6. Utility Animations */
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
+/* Connected playlist flow */
+* { box-sizing: border-box; }
+body { display: block; overflow: auto; }
+.app-container { width: 100%; height: auto; min-height: 100vh; padding: 32px 16px; }
+.timer-card { max-width: 640px; }
+.app-title { margin-bottom: 12px; }
+.intro { color: #aab9ce; text-align: center; margin: 0 0 28px; line-height: 1.6; }
+.connection { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 28px; color: #cbd5e1; font-size: 14px; }
+.btn-spotify { background: #1ed760; color: #082411; padding: 12px 16px; font-size: 14px; }
+.btn:disabled, .text-button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.btn:focus-visible, a:focus-visible, .text-button:focus-visible { outline: 3px solid #38bdf8; outline-offset: 4px; }
+.text-button { border: 0; background: transparent; color: #b7c7dc; cursor: pointer; text-decoration: underline; }
+.input-label { color: #aab9ce; }
+.input-suffix { color: #aab9ce; }
+.notice { color: #aab9ce; font-size: 13px; line-height: 1.6; }
+.error { color: #fecaca; background: #7f1d1d55; border: 1px solid #f8717155; padding: 14px; border-radius: 10px; line-height: 1.5; }
+.success { color: #86efac; }
+.results { margin-top: 28px; padding-top: 22px; border-top: 1px solid #ffffff18; }
+.result-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.result-heading h2 { font-size: 20px; margin: 0; }
+.result-heading > span { color: #b6c6da; font-size: 14px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
+.tags span { background: #38bdf814; border: 1px solid #38bdf830; color: #7dd3fc; border-radius: 20px; font-size: 12px; padding: 5px 10px; }
+.track-list { padding: 0; list-style: none; max-height: 390px; overflow-y: auto; }
+.track-list li { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-bottom: 1px solid #ffffff0c; }
+.track-list img { flex-shrink: 0; object-fit: contain; }
+.track-list li > div { flex: 1; min-width: 0; }
+.track-list a { color: #f8fafc; font-size: 14px; text-decoration: none; }
+.track-list a:hover { text-decoration: underline; }
+.track-list small { display: block; color: #9aabc1; margin-top: 4px; }
+.track-list li > span { color: #aab9ce; font-size: 13px; font-variant-numeric: tabular-nums; }
+.full-width { width: 100%; }
+.start-timer { margin-top: 14px; }
+.saved-link { color: #86efac; display: flex; gap: 8px; align-items: center; margin: 16px 0; }
+iframe { border: 0; border-radius: 12px; margin-top: 12px; }
+@media (max-width: 480px) {
+  .timer-card { padding: 26px 20px; }
+  .timer-digits { font-size: 4rem; }
+  .connection { flex-wrap: wrap; }
+  .result-heading { align-items: flex-start; flex-direction: column; }
+}

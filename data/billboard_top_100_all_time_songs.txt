@@ -1,0 +1,101 @@
+Artist	Song_Title	Billboard_rank	Year	LyricID	LNS	ArtistID_1	ArtistID_2	unique_words	IDF_trimean
+Chubby Checker 	The Twist 	1	1961	16003	23.83	3880	NaN	49	0.054405214
+Santana & Rob Thomas	Smooth	2	1999	3858569	42.71	13645	146583	108	0.191235927
+Bobby Darin 	Mack The Knife 	3	1959	871701	83.17	4025	NaN	121	0.380535264
+LeAnn Rimes 	How Do I Live 	4	1997	3847877	2.2	182450	NaN	59	0.022477386
+LMFAO 	Party Rock Anthem (Feat. Lauren Bennett & GoonRock) 	5	2011	3541051	29.46	1107987	NaN	120	0.181643914
+The Black Eyed Peas 	I Gotta Feeling 	6	2003	1388641	30.17	302855	NaN	98	0.131294172
+Los Del Rio 	Macarena (Bayside Boys Mix) 	7	1996	1598811	8.61	169655	NaN	76	0.050558905
+Olivia Newton-John 	Physical 	8	1981	744821	16.41	5023	NaN	75	0.064152508
+Debby Boone	You Light Up My Life 	9	1977	16570	35.43	2216	NaN	70	0.09651536
+The Beatles 	Hey Jude 	10	1968	859721	32.82	3644	NaN	82	0.107585681
+Mariah Carey 	We Belong Together 	11	2005	105493	0.59	62404	NaN	156	0.097494397
+Toni Braxton 	Un-Break My Heart 	12	1996	3817350	52.81	37576	NaN	79	0.157386787
+Usher 	Yeah! (Feat. Lil Jon & Ludacris) 	13	2004	6409	8.05	44890	NaN	177	0.208224171
+Kim Carnes 	Bette Davis Eyes 	14	1981	16110	94.83	3842	NaN	78	0.420433735
+Diana Ross and Lionel Richie 	Endless Love 	15	1981	38146	13.19	5308	5267	78	0.061129307
+Rod Stewart 	Tonight’s The night (Gonna Be Alright) 	16	1976	34343	64.42	5533	NaN	90	0.212632061
+Jewel 	You Were Meant For Me 	17	1997	15050	2.23	22611	NaN	160	0.133650764
+Bryan Adams 	(Everything I Do) I Do It For You 	18	1991	2792451	6.82	NaN	NaN	72	0.043655105
+Boyz II Men 	I’ll Make Love To You 	19	1994	16438	18.09	3759	NaN	88	0.081398573
+Percy Faith 	The Theme From ‘A Summer Place’ 	20	1960	958301	54.79	1893	NaN	58	0.130420008
+Chic 	Le Freak 	21	1978	1276161	15.02	3884	NaN	89	0.075686007
+Bee Gees 	How Deep Is Your Love 	22	1977	16891	42.38	3652	NaN	81	0.130470189
+Survivor 	Eye Of The Tiger 	23	1982	14389	57.35	5568	NaN	91	0.193074911
+Rihanna 	We Found Love (Feat. Calvin Harris) 	24	2011	3773511	33.04	704560	NaN	57	0.075845038
+Flo Rida 	Low (Feat. T-Pain) 	25	2008	731471	30.21	923332	NaN	195	0.315716009
+Andy Gibb 	I Just Want To Be Your Everything 	26	1977	17117	5.91	13045	NaN	80	0.047480467
+Next 	Too Close 	27	1998	17684	21.98	225344	NaN	100	0.11218544
+The Police 	Every Breath You Take 	28	1983	306361	52.44	5163	NaN	68	0.137873665
+Gotye 	Somebody That I Used To Know (Feat. Kimbra) 	29	2012	3801132	2.29	665335	NaN	111	0.062204664
+Irene Cara 	Flashdance… What A Feeling 	30	1983	1567041	61.12	16290	NaN	68	0.16515344
+Adele 	Rolling In The Deep 	31	2011	3384741	25.53	861756	NaN	118	0.16536877
+Bobby Lewis 	Tossin’ And Turnin’ 	32	1961	3449431	64	203924	NaN	67	0.172647727
+Johnny Horton 	The Battle Of New Orleans 	33	1959	2988791	87.13	1652	NaN	127	0.424257661
+Mariah Carey & Boyz II Men 	One Sweet Day 	34	1995	25355	63.37	62404	3759	85	0.199088735
+Savage Garden 	Truly, Madly, Deeply 	35	1998	14281	69.99	203304	NaN	89	0.231072827
+Wings	Silly Love Songs 	36	1976	NaN	0.13	139071	NaN	61	0.012890933
+Marvin Gaye 	Let’s Get It On 	37	1973	896171	0.2	4344	NaN	73	0.018465213
+The Bee Gees 	Night Fever 	38	1978	16899	28.42	3652	NaN	97	0.124148578
+Queen 	Another One Bites The Dust 	39	1980	14728	55.29	5205	NaN	89	0.183768728
+Paul McCartney & Michael Jackson 	Say, Say, Say	40	1983	1486341	8.51	4865	4576	86	0.058962903
+Nickelback 	How You Remind Me	41	2001	40820	19.62	410589	NaN	88	0.085010894
+Tony Orlando & Dawn	Tie A Yellow Ribbon Round The Ole Oak Tree	42	1973	NaN	52.04	111408	NaN	81	0.15882755
+Tommy Edwards 	It’s All In The Game 	43	1958	1185621	53.31	24274	NaN	56	0.122740346
+The Beatles 	I Wanna Hold Your Hand 	44	1964	859851	2.2	3644	NaN	37	0.012174864
+Andy Gibb 	Shadow Dancing	45	1978	17118	19.56	13045	NaN	91	0.089291704
+Carly Rae Jepsen 	Call Me Maybe 	46	2012	3810504	18.95	1185382	NaN	96	0.095948802
+Elton John 	Candle In The Wind 1997/Something About The Way You Look Tonight 	47	1997	14897	79.48	4617	NaN	104	0.315126287
+Alicia Keys 	No One 	48	2007	593041	1.12	469431	NaN	80	0.030055204
+Whitney Houston 	I Will Always Love You 	49	1992	15271	11.2	4519	NaN	56	0.040248725
+Boys II Men 	End Of The Road 	50	1992	16436	0.58	3759	NaN	131	0.065636733
+The Black Eyed Peas 	Boom Boom Pow	51	2009	1352361	86.56	302855	NaN	107	0.373159379
+Blondie 	Call Me 	52	1980	43129	58.96	3703	NaN	88	0.192033662
+Mario 	Let Me Love You 	53	2005	94281	30.22	529812	NaN	119	0.1815555
+Bee Gees 	Stayin’ Alive 	54	1978	19627	27.64	3652	NaN	89	0.106976799
+Kenny Rogers 	Lady 	55	1980	136172	31.59	93355	NaN	67	0.08413503
+Ke$ha 	Tik Tok 	56	2010	1679891	35.71	2035613	NaN	141	0.243288579
+The Monkees 	I’m A Believer 	57	1966	890981	17.18	4940	NaN	56	0.049892754
+Kanye West 	Gold Digger (Feat. Jamie Foxx) 	58	2005	121366	4.11	353484	NaN	200	0.213066927
+Timbaland 	Apologize (Feat. OneRepublic) 	59	2007	224416	28.36	218225	NaN	68	0.078709905
+Ace of Base 	The Sign 	60	1994	1396681	30.44	43297	NaN	74	0.090224239
+J. Geils Band 	Centerfold 	61	1982	3809154	27.66	4347	NaN	131	0.199880889
+John Lennon 	(Just Like) Starting Over 	62	1980	436	9.96	4744	NaN	81	0.057549599
+Brandy & Monica 	The Boy Is Mine 	63	1998	1362151	0.07	142547	106830	139	0.055203241
+Stevie B 	Because I Love You 	64	1990	113396	10.08	14394	NaN	64	0.044366039
+Joan Jett & The Blackhearts 	I Love Rock ‘n Roll 	65	1982	1270491	25.07	197187	NaN	83	0.090342022
+The 5th Dimension 	Aquarius/Let The Sunshine In 	66	1969	17066	95.32	50073	NaN	74	0.426603541
+Tag Team 	Whoomp! (There It Is) 	67	1993	128304	49.95	130184	NaN	180	0.350832745
+Maroon 5 	Moves Like Jagger (Feat. Christina Aguilera) 	68	2011	3657071	21.95	529962	NaN	111	0.137475052
+Paul McCartney & Stevie Wonder 	Ebony and Ivory 	69	1982	NaN	41.37	4865	139462	44	0.078447413
+Paula Abdul 	Rush, Rush 	70	1991	138429	4.12	3495	NaN	103	0.062646951
+Dionne and Friends 	That’s What Friends Are For 	71	1986	14089	1.42	3158	NaN	77	0.029988878
+Diana Ross 	Upside Down	72	1980	1207891	68.92	5308	NaN	63	0.182605023
+The Archies 	Sugar, Sugar 	73	1969	13676	35.7	22386	NaN	55	0.078963236
+Bruno Mars 	Just The Way You Are 	74	2010	3210631	24.7	1107691	NaN	88	0.09765844
+Nelly 	Dilemma (Feat. Kelly Rowland) 	75	2002	6135	2.81	416191	NaN	160	0.140601135
+Marvin Gaye 	I Heard It Through The Grapevine 	76	1968	896181	4.93	4344	NaN	109	0.072480889
+Shania Twain 	You’re Still The One 	77	1998	18058	1.69	42121	NaN	80	0.033599775
+Donna Summer 	Hot Stuff 	78	1979	14107	71.38	5556	NaN	66	0.1952497
+Coolio 	Gangsta’s Paradise (Feat. L.V.) 	79	1995	833651	17.01	44721	NaN	174	0.241533375
+The Steve Miller Band 	Abracadabra 	80	1982	17834	59.24	198268	NaN	87	0.190966985
+Michael Jackson 	Billie Jean 	81	1983	15115	17.14	4576	NaN	128	0.159700318
+Carly Simon 	You’re So Vain 	82	1973	NaN	57.05	5430	NaN	106	0.226802047
+Lionel Richie 	Say You, Say Me 	84	1985	1596741	27.27	5267	NaN	92	0.11106697
+The Knack 	My Sharona 	85	1979	2613311	31.96	4696	NaN	61	0.077974342
+Lionel Richie 	All Night Long (All Night) 	86	1983	13842	37.7	5267	NaN	98	0.153410893
+Sinead O’Connor 	Nothing Compares 2 U 	87	1990	17829	11.05	110558	NaN	105	0.088508603
+All-4-One 	I Swear 	88	1994	128332	18.15	142434	NaN	94	0.090293162
+Mary J. Blige 	Family Affair 	89	2001	1002491	9.66	57322	NaN	129	0.129597471
+Foreigner 	Waiting For A Girl Like You 	90	1981	NaN	3.26	4296	NaN	92	0.049163282
+Elvis Presley 	Are You Lonesome To-Night? 	91	1960	1482871	43.65	5175	NaN	115	0.209293471
+Roberta Flack 	Killing Me Softly With His Song 	92	1973	15579	46.45	4266	NaN	70	0.123395758
+John Cougar 	Hurts So Good 	93	1982	4883	2.39	105068	NaN	90	0.044068461
+Wild Cherry 	Play That Funky Music 	93	1976	15840	26.56	5824	NaN	101	0.127693954
+Puff Daddy & Faith Evans 	I’ll Be Missing You (Feat. 112) 	94	1997	833281	9.55	484466	151651	189	0.233217016
+B.J. Thomas 	Raindrops Keep Fallin’ On My Head 	95	1970	3856888	29.31	131343	NaN	78	0.093109771
+Phil Collins 	Another Day In Paradise 	96	1989	3851865	30.98	3942	NaN	82	0.103078684
+Maroon 5 	One More Night 	97	2012	3832510	10.88	529962	NaN	102	0.082957495
+Emotions 	Best of My Love 	98	1977	188	17.18	4190	NaN	74	0.064602909
+fun. 	We Are Young (Feat. Janelle Monae) 	99	2012	3806527	18.45	1146421	NaN	119	0.143742286
+Usher 	You Make Me Wanna… 	100	1997	4103	0.21	44890	NaN	114	0.042688366
