@@ -126,7 +126,7 @@ export default function App() {
   return (
     <main className="app-container">
       <div className="timer-card">
-        <h1 className="app-title"><Timer size={32} className="icon-blue" /> Music Timer</h1>
+        <h1 className="app-title"><Timer size={32} className="icon-blue" /> Beats Per Minute</h1>
         <p className="intro">A playlist for your mood. A little time for yourself.</p>
         <div className="connection">
           <span>{authLoading ? 'Checking Spotify…' : connected ? playbackReady ? 'Spotify connected' : 'Update Spotify permissions' : 'Connect your music'}</span>

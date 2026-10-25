@@ -131,7 +131,7 @@ export async function savePlaylist(tracks, prompt, targetMinutes) {
   let playlist = stored(key);
   if (!playlist) {
     playlist = await spotifyRequest('/me/playlists', { method: 'POST', body: JSON.stringify({
-      name: `Music Timer · ${prompt}`.slice(0, 100), public: false,
+      name: `Beats Per Minute · ${prompt}`.slice(0, 100), public: false,
       description: `A ${targetMinutes}-minute session, matched from Spotify song lyrics.`,
     }) });
     sessionStorage.setItem(key, JSON.stringify(playlist));
