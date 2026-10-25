@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Timer, Music, Play, Square, Loader2, ExternalLink, Check } from 'lucide-react';
 import { connect, disconnect, finishLogin, isConnected, isConfigured, savePlaylist } from './lib/spotify.js';
-import { rankCandidates, resolveCandidates, fitPlaylist, clearMatches } from './lib/playlist.js';
+import { rankCandidates, resolveCandidates, fitPlaylist } from './lib/playlist.js';
 
 function draft() {
   try { return JSON.parse(sessionStorage.getItem('vibetimer.form') || '{}'); } catch { return {}; }
@@ -61,10 +61,10 @@ export default function App() {
     setError(''); setBusy('generate'); setProgress('Matching your vibe against the catalogue…');
     setResult(null); setSaved(null); setCompleted(false);
     try {
-      const ranked = await rankCandidates(prompt);
+      const ranked = await rankCandidates(prompt, minutes);
       if (!ranked.candidates.length) throw new Error('No songs matched that theme. Try a few different words.');
       const resolved = await resolveCandidates(ranked.candidates, (done, total) => {
-        setProgress(`Finding songs on Spotify: ${done} of ${total}`);
+        setProgress(`Preparing tracks: ${done} of ${total}`);
       });
       const fitted = fitPlaylist(resolved.tracks, minutes);
       if (!fitted.tracks.length) throw new Error('No matching Spotify songs fit this time. Try a longer session or another theme.');
@@ -89,7 +89,7 @@ export default function App() {
         <div className="connection">
           <span>{authLoading ? 'Checking Spotify…' : connected ? 'Spotify connected' : 'Connect your music'}</span>
           {connected ? <button className="text-button" disabled={disabled || Boolean(deadline)} onClick={() => {
-            disconnect(); clearMatches(); setConnected(false); setResult(null); setSaved(null);
+            disconnect(); setConnected(false); setResult(null); setSaved(null);
           }}>Disconnect</button> : <button className="btn btn-spotify" disabled={disabled} onClick={handleConnect}>Connect Spotify</button>}
         </div>
         {!isConfigured() && <p className="notice">Setup: add your Spotify Client ID to .env.local and restart the webpage. Follow README.md.</p>}
@@ -122,15 +122,14 @@ export default function App() {
         {result && <section className="results" aria-label="Your playlist">
           <div className="result-heading"><h2>Your mix</h2><span>{result.tracks.length} songs · {formatTime(result.totalMs / 1000)}</span></div>
           <p className="notice">“{result.prompt}” · {result.minutes}-minute target. Searched {result.catalogTracks} catalogue songs.</p>
-          {result.catalogTracks < 100 && <p className="notice">Only {result.catalogTracks} songs are loaded. Import the full Billboard file and restart Python to use all 100.</p>}
-          {result.expandedTerms?.length > 0 && <div className="tags" aria-label="Related words">{result.expandedTerms.map(term => <span key={term}>{term}</span>)}</div>}
-          {result.missing > 0 && <p className="notice">{result.missing} theme matches could not be confidently found on Spotify.</p>}
+          {result.catalogTracks < 100 && <p className="notice">Only {result.catalogTracks} songs are loaded. Run the data loader and restart the API.</p>}
+          {result.missing > 0 && <p className="notice">{result.missing} tracks did not have a usable dataset ID or duration.</p>}
           <ol className="track-list">{result.tracks.map(track => <li key={track.uri}>
             {track.image ? <img src={track.image} alt="" width="44" height="44" loading="lazy" /> : <Music size={28} aria-hidden="true" />}
             <div><a href={track.url} target="_blank" rel="noreferrer">{track.title}</a><small>{track.artists}</small></div>
             <span>{formatTime(track.durationMs / 1000)}</span>
           </li>)}</ol>
-          <p className="notice">Durations from Spotify. The mix may finish before your timer.</p>
+          <p className="notice">Durations from the dataset may differ from Spotify. The mix may finish before your timer.</p>
           {!saved ? <button className="btn btn-spotify full-width" onClick={save} disabled={disabled || !connected}>
             {busy === 'save' ? <>Saving… <Loader2 size={16} className="spinner" /></> : 'Save private playlist to Spotify'}
           </button> : <>

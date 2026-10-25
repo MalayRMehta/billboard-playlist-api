@@ -27,6 +27,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+data/spotify_songs.csv
 backend/target/
 backend/data/
 backend/*.jar

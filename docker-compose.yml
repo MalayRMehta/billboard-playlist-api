@@ -1,0 +1,19 @@
+services:
+  catalogue-db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: billboard
+      POSTGRES_USER: billboard
+      POSTGRES_PASSWORD: billboard
+    ports:
+      - "5433:5432"
+    volumes:
+      - billboard-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U billboard -d billboard"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  billboard-db-data:

@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   plugins: [react()],
   server: {
     host: '127.0.0.1', port: 5173, strictPort: true,
-    proxy: { '/api': { target: env.JAVA_API_URL || 'http://127.0.0.1:8080', changeOrigin: true } },
+    proxy: { '/api': { target: env.PYTHON_API_URL || 'http://127.0.0.1:8001', changeOrigin: true } },
   },
   }
 })

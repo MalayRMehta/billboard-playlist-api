@@ -1,4 +1,4 @@
-target/
-data/
-*.log
-.idea/
+.venv/
+.cache/
+__pycache__/
+*.py[cod]

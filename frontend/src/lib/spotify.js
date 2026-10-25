@@ -125,7 +125,7 @@ export async function savePlaylist(tracks, prompt, targetMinutes) {
   if (!playlist) {
     playlist = await spotifyRequest('/me/playlists', { method: 'POST', body: JSON.stringify({
       name: `VibeTimer · ${prompt}`.slice(0, 100), public: false,
-      description: `A ${targetMinutes}-minute session, matched from the Billboard catalogue.`,
+      description: `A ${targetMinutes}-minute session, matched from Spotify song lyrics.`,
     }) });
     sessionStorage.setItem(key, JSON.stringify(playlist));
   }
