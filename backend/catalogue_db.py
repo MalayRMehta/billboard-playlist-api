@@ -110,6 +110,12 @@ def nearest_tracks(
     cursor: tuple[float, str] | None = None,
 ) -> list[dict[str, Any]]:
     with connect() as connection:
+        # The cursor predicate filters approximate HNSW results. Without an
+        # iterative scan, the default ef_search of 40 can exhaust the initial
+        # neighbor set before a later page is filled.
+        connection.execute("SELECT set_config('hnsw.iterative_scan', 'strict_order', true)")
+        connection.execute("SELECT set_config('hnsw.ef_search', %s, true)", (str(max(100, limit)),))
+        connection.execute("SELECT set_config('hnsw.max_scan_tuples', '100000', true)")
         if cursor is None:
             rows = connection.execute(
                 """SELECT payload, embedding <=> %s AS distance

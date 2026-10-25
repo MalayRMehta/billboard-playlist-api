@@ -23,7 +23,7 @@ def refresh_catalogue() -> None:
 class CandidateRequest(BaseModel):
     prompt: str = Field(min_length=2, max_length=240)
     target_minutes: int = Field(ge=1, le=240)
-    pick_probability: int = Field(default=50, ge=0, le=100)
+    pick_probability: int = Field(default=75, ge=0, le=100)
 
 
 def score_track(track: dict[str, Any], lyric_similarity: float) -> dict[str, Any]:

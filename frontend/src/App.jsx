@@ -9,14 +9,24 @@ const VIBES = [
 ];
 
 function draft() {
-  try { return JSON.parse(sessionStorage.getItem('vibetimer.form') || '{}'); } catch { return {}; }
+  try {
+    const saved = JSON.parse(sessionStorage.getItem('vibetimer.form') || '{}');
+    const migrationKey = 'vibetimer.variety-mapping-v2';
+    if (!sessionStorage.getItem(migrationKey)) {
+      const reversed = { 25: 100, 50: 75, 75: 50, 100: 25 };
+      if (reversed[saved.pickProbability]) saved.pickProbability = reversed[saved.pickProbability];
+      sessionStorage.setItem('vibetimer.form', JSON.stringify(saved));
+      sessionStorage.setItem(migrationKey, 'true');
+    }
+    return saved;
+  } catch { return {}; }
 }
 
 export default function App() {
   const [minutes, setMinutes] = useState(() => draft().minutes || 40);
   const [activity, setActivity] = useState(() => draft().activity || '');
   const [vibe, setVibe] = useState(() => draft().prompt || '');
-  const [pickProbability, setPickProbability] = useState(() => [25, 50, 75, 100].includes(draft().pickProbability) ? draft().pickProbability : 50);
+  const [pickProbability, setPickProbability] = useState(() => [25, 50, 75, 100].includes(draft().pickProbability) ? draft().pickProbability : 75);
   const [connected, setConnected] = useState(isConnected);
   const [playbackReady, setPlaybackReady] = useState(hasPlaybackScopes);
   const [currentTrack, setCurrentTrack] = useState(null);
@@ -57,13 +67,15 @@ export default function App() {
     const refresh = async () => {
       try {
         const data = await getCurrentlyPlaying();
-        if (alive) setCurrentTrack(data?.is_playing && data.item ? data.item : null);
-      } catch { if (alive) setCurrentTrack(null); }
+        const item = data?.is_playing ? data.item : null;
+        const belongsToPlaylist = !result?.tracks?.length || result.tracks.some((track) => track.uri === item?.uri);
+        if (alive && item && belongsToPlaylist) setCurrentTrack(item);
+      } catch { /* Keep the playlist's first track visible if Spotify is slow to respond. */ }
     };
     refresh();
     const interval = setInterval(refresh, 20000);
     return () => { alive = false; clearInterval(interval); };
-  }, [deadline, connected, playbackReady]);
+  }, [deadline, connected, playbackReady, result]);
 
   function persistForm(nextMinutes = minutes, nextVibe = vibe, nextActivity = activity, nextVariety = pickProbability) {
     sessionStorage.setItem('vibetimer.form', JSON.stringify({ minutes: nextMinutes, prompt: nextVibe, activity: nextActivity, pickProbability: nextVariety }));
@@ -114,10 +126,12 @@ export default function App() {
       const playlist = saved || await savePlaylist(result.tracks, result.prompt, result.minutes);
       setSaved(playlist);
       await startPlaylistPlayback(playlist.id);
-      try {
-        const current = await getCurrentlyPlaying();
-        setCurrentTrack(current?.is_playing && current.item ? current.item : null);
-      } catch { setCurrentTrack(null); }
+      const firstTrack = result.tracks[0];
+      setCurrentTrack(firstTrack ? {
+        uri: firstTrack.uri,
+        name: firstTrack.title,
+        artists: [{ name: firstTrack.artists }],
+      } : null);
       setTimeLeft(result.minutes * 60);
       setDeadline(Date.now() + result.minutes * 60000);
       setCompleted(false);
@@ -207,10 +221,10 @@ export default function App() {
             <div className="variety-input">
               <label htmlFor="song-variety">HOW ADVENTUROUS?</label>
               <select id="song-variety" value={pickProbability} disabled={disabled} onChange={(e) => setPickProbability(Number(e.target.value))}>
-                <option value="25">Stay close to the theme</option>
-                <option value="50">Balanced mix</option>
-                <option value="75">Explore more</option>
-                <option value="100">Maximum variety</option>
+                <option value="100">Stay close to the theme</option>
+                <option value="75">Balanced mix</option>
+                <option value="50">Explore more</option>
+                <option value="25">Maximum variety</option>
               </select>
             </div>
 

@@ -1,4 +1,4 @@
-export async function rankCandidates(prompt, targetMinutes, pickProbability = 50) {
+export async function rankCandidates(prompt, targetMinutes, pickProbability = 75) {
   let response;
   try {
     response = await fetch('/api/candidates', { method: 'POST',
