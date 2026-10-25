@@ -4,7 +4,7 @@ React playlist timer. Python embeds English lyrics from the [Kaggle Spotify song
 
 ## Setup
 
-1. Register a Spotify app with redirect URI `http://127.0.0.1:5173/callback`. Copy `frontend/.env.example` to `frontend/.env.local` and set `VITE_SPOTIFY_CLIENT_ID`.
+1. Register a Spotify app with redirect URI `http://127.0.0.1:5173/callback`. Copy `frontend/.env.example` to `frontend/.env.local` and set `VITE_SPOTIFY_CLIENT_ID`. The frontend uses Spotify PKCE OAuth and stores tokens in the browser session.
 2. Install Python requirements (Python 3.11; Docker required for PostgreSQL):
 
    ```bash

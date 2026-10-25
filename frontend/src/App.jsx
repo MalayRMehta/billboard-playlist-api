@@ -1,100 +1,104 @@
 import { useEffect, useState } from 'react';
-import { Timer, Music, Play, Square, Loader2, ExternalLink, Check } from 'lucide-react';
+import { Music2, Play, Square, Shuffle, RotateCcw, Disc, Check, ExternalLink, Loader2 } from 'lucide-react';
 import { connect, disconnect, finishLogin, getCurrentlyPlaying, hasPlaybackScopes, isConnected, isConfigured, savePlaylist, startPlaylistPlayback } from './lib/spotify.js';
 import { rankCandidates, resolveCandidates, fitPlaylist } from './lib/playlist.js';
+
+const VIBES = [
+  'dreamy indie', 'disco party', 'main character energy', 'sunny afternoon',
+  'lo-fi daydream', 'hyperpop chaos', 'cosy rainy day',
+];
 
 function draft() {
   try { return JSON.parse(sessionStorage.getItem('vibetimer.form') || '{}'); } catch { return {}; }
 }
-function formatTime(seconds) {
-  return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
-}
-function savedPickProbability() {
-  const saved = draft().pickProbability;
-  return [25, 50, 75, 100].includes(saved) ? saved : 50;
-}
 
 export default function App() {
-  const [inputMinutes, setInputMinutes] = useState(() => draft().minutes || 40);
-  const [inputVibe, setInputVibe] = useState(() => draft().prompt || '');
-  const [pickProbability, setPickProbability] = useState(savedPickProbability);
+  const [minutes, setMinutes] = useState(() => draft().minutes || 40);
+  const [activity, setActivity] = useState(() => draft().activity || '');
+  const [vibe, setVibe] = useState(() => draft().prompt || '');
+  const [pickProbability, setPickProbability] = useState(() => [25, 50, 75, 100].includes(draft().pickProbability) ? draft().pickProbability : 50);
   const [connected, setConnected] = useState(isConnected);
   const [playbackReady, setPlaybackReady] = useState(hasPlaybackScopes);
-  const [nowPlaying, setNowPlaying] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [currentTrack, setCurrentTrack] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [deadline, setDeadline] = useState(null);
+  const [completed, setCompleted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState('');
   const [progress, setProgress] = useState('');
   const [error, setError] = useState('');
   const [result, setResult] = useState(null);
   const [saved, setSaved] = useState(null);
-  const [deadline, setDeadline] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     let alive = true;
     finishLogin().then(() => {
       if (alive) { setConnected(isConnected()); setPlaybackReady(hasPlaybackScopes()); }
-    })
-      .catch(e => { if (alive) setError(e.message); })
-      .finally(() => { if (alive) setAuthLoading(false); });
+    }).catch((e) => { if (alive) setError(e.message); })
+      .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, []);
 
   useEffect(() => {
-    if (!connected || !playbackReady) { setNowPlaying(null); return; }
+    if (!deadline) return undefined;
+    const tick = () => {
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining === 0) { setDeadline(null); setCompleted(true); }
+    };
+    tick();
+    const interval = setInterval(tick, 250);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  useEffect(() => {
+    if (!deadline || !connected || !playbackReady) { setCurrentTrack(null); return undefined; }
     let alive = true;
     const refresh = async () => {
       try {
         const data = await getCurrentlyPlaying();
-        if (alive) setNowPlaying(data?.is_playing && data.item ? data.item : null);
-      } catch { if (alive) setNowPlaying(null); }
+        if (alive) setCurrentTrack(data?.is_playing && data.item ? data.item : null);
+      } catch { if (alive) setCurrentTrack(null); }
     };
     refresh();
     const interval = setInterval(refresh, 20000);
     return () => { alive = false; clearInterval(interval); };
-  }, [connected, playbackReady]);
+  }, [deadline, connected, playbackReady]);
 
-  useEffect(() => {
-    if (!deadline) return;
-    const update = () => {
-      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
-      setTimeLeft(remaining);
-      if (!remaining) { setDeadline(null); setCompleted(true); }
-    };
-    update();
-    const interval = setInterval(update, 250);
-    return () => clearInterval(interval);
-  }, [deadline]);
+  function persistForm(nextMinutes = minutes, nextVibe = vibe, nextActivity = activity, nextVariety = pickProbability) {
+    sessionStorage.setItem('vibetimer.form', JSON.stringify({ minutes: nextMinutes, prompt: nextVibe, activity: nextActivity, pickProbability: nextVariety }));
+  }
 
   async function handleConnect(forceConsent = false) {
     setError('');
     setBusy('connect');
-    sessionStorage.setItem('vibetimer.form', JSON.stringify({ minutes: inputMinutes, prompt: inputVibe, pickProbability }));
-    try { await connect(forceConsent); } catch (e) { setError(e.message); setBusy(''); }
+    persistForm();
+    try { await connect(forceConsent); }
+    catch (e) { setError(e.message); setBusy(''); }
   }
 
   async function generate(event) {
-    event.preventDefault();
-    const minutes = Number(inputMinutes);
-    const prompt = inputVibe.trim();
-    if (!Number.isInteger(minutes) || minutes < 1 || minutes > 240 || prompt.length < 2 || prompt.length > 240) {
-      setError('Choose 1–240 whole minutes and describe your vibe in 2–240 characters.'); return;
+    event?.preventDefault();
+    const duration = Number(minutes);
+    const mood = vibe.trim();
+    const task = activity.trim();
+    const prompt = task ? `${mood}, for ${task}` : mood;
+    if (!Number.isInteger(duration) || duration < 1 || duration > 240 || mood.length < 2 || prompt.length > 240) {
+      setError('Choose 1–240 whole minutes, describe your vibe in at least 2 characters, and keep the combined prompt under 240 characters.');
+      return;
     }
-    sessionStorage.setItem('vibetimer.form', JSON.stringify({ minutes, prompt, pickProbability: Number(pickProbability) }));
-    setError(''); setBusy('generate'); setProgress('Matching your vibe against the catalogue…');
+    persistForm(duration, mood, task, Number(pickProbability));
+    setError(''); setBusy('generate'); setLoading(true); setProgress('Matching your vibe against the catalogue…');
     setResult(null); setSaved(null); setCompleted(false);
     try {
-      const ranked = await rankCandidates(prompt, minutes, Number(pickProbability));
+      const ranked = await rankCandidates(prompt, duration, Number(pickProbability));
       if (!ranked.candidates.length) throw new Error('No songs matched that theme. Try a few different words.');
-      const resolved = await resolveCandidates(ranked.candidates, (done, total) => {
-        setProgress(`Preparing tracks: ${done} of ${total}`);
-      });
-      const fitted = fitPlaylist(resolved.tracks, minutes);
+      const resolved = await resolveCandidates(ranked.candidates, (done, total) => setProgress(`Preparing tracks: ${done} of ${total}`));
+      const fitted = fitPlaylist(resolved.tracks, duration);
       if (!fitted.tracks.length) throw new Error('No matching Spotify songs fit this time. Try a longer session or another theme.');
-      setResult({ ...ranked, ...fitted, minutes, missing: resolved.missing });
+      setResult({ ...ranked, ...fitted, minutes: duration, activity: task, missing: resolved.missing });
     } catch (e) { setError(e.message); setConnected(isConnected()); }
-    finally { setBusy(''); setProgress(''); }
+    finally { setBusy(''); setLoading(false); setProgress(''); }
   }
 
   async function save() {
@@ -110,11 +114,10 @@ export default function App() {
       const playlist = saved || await savePlaylist(result.tracks, result.prompt, result.minutes);
       setSaved(playlist);
       await startPlaylistPlayback(playlist.id);
-      setNowPlaying(null);
       try {
         const current = await getCurrentlyPlaying();
-        setNowPlaying(current?.is_playing && current.item ? current.item : null);
-      } catch { /* The timer can still start if the track lookup fails. */ }
+        setCurrentTrack(current?.is_playing && current.item ? current.item : null);
+      } catch { setCurrentTrack(null); }
       setTimeLeft(result.minutes * 60);
       setDeadline(Date.now() + result.minutes * 60000);
       setCompleted(false);
@@ -122,83 +125,152 @@ export default function App() {
     finally { setBusy(''); }
   }
 
-  const disabled = Boolean(busy) || authLoading;
+  function reset() {
+    setDeadline(null); setCompleted(false); setTimeLeft(0); setCurrentTrack(null);
+    setResult(null); setSaved(null); setError(''); setProgress('');
+  }
+
+  function randomVibe() {
+    const choices = VIBES.filter((option) => option !== vibe);
+    setVibe(choices[Math.floor(Math.random() * choices.length)] || VIBES[0]);
+  }
+
+  const formatTime = (seconds) => {
+    const wholeSeconds = Math.floor(seconds);
+    return `${String(Math.floor(wholeSeconds / 60)).padStart(2, '0')}:${String(wholeSeconds % 60).padStart(2, '0')}`;
+  };
+  const progressPercent = Math.min(100, (timeLeft / (Math.max(1, Number(result?.minutes || minutes)) * 60)) * 100);
+  const disabled = Boolean(busy) || loading;
+
   return (
     <main className="app-container">
-      <div className="timer-card">
-        <h1 className="app-title"><Timer size={32} className="icon-blue" /> Beats Per Minute</h1>
-        <p className="intro">A playlist for your mood. A little time for yourself.</p>
-        <div className="connection">
-          <span>{authLoading ? 'Checking Spotify…' : connected ? playbackReady ? 'Spotify connected' : 'Update Spotify permissions' : 'Connect your music'}</span>
-          {connected && !playbackReady ? <button className="btn btn-spotify" disabled={disabled} onClick={() => handleConnect(true)}>Reconnect Spotify</button> :
-            connected ? <button className="text-button" disabled={disabled || Boolean(deadline)} onClick={() => {
-              disconnect(); setConnected(false); setPlaybackReady(false); setResult(null); setSaved(null);
-            }}>Disconnect</button> : <button className="btn btn-spotify" disabled={disabled} onClick={handleConnect}>Connect Spotify</button>}
+      <div className="blob blob-pink" />
+      <div className="blob blob-yellow" />
+      <div className="blob blob-blue" />
+      <span className="doodle doodle-one" aria-hidden="true">✳</span>
+      <span className="doodle doodle-two" aria-hidden="true">✦</span>
+      <span className="doodle doodle-three" aria-hidden="true">♫</span>
+      <span className="doodle doodle-four" aria-hidden="true">♥</span>
+
+      <section className="timer-card">
+        <header className="brand">
+          <span className="brand-icon"><Music2 size={21} /></span>
+          BPM<span className="brand-star">✳</span>
+        </header>
+
+        <div className="connection-bar">
+          <span className={`connection-status${connected ? ' is-connected' : ''}`}>
+            <span className="status-dot" />
+            {connected ? playbackReady ? 'Spotify connected' : 'Spotify permissions needed' : 'Connect your Spotify'}
+          </span>
+          {connected ? <button className="connection-button" disabled={disabled || Boolean(deadline)} onClick={() => handleConnect(true)}>
+            {playbackReady ? 'Reconnect' : 'Update access'}
+          </button> : <button className="connection-button" disabled={disabled || Boolean(deadline)} onClick={() => handleConnect()}>
+            {busy === 'connect' ? 'Connecting…' : 'Connect'}
+          </button>}
+          {connected && <button className="connection-disconnect" disabled={disabled || Boolean(deadline)} onClick={() => {
+            disconnect(); setConnected(false); setPlaybackReady(false); setResult(null); setSaved(null); setCurrentTrack(null);
+          }}>Disconnect</button>}
         </div>
-        {!isConfigured() && <p className="notice">Setup: add your Spotify Client ID to .env.local and restart the webpage. Follow README.md.</p>}
-        {error && <p className="error" role="alert">{error}</p>}
-        {deadline ? (
-          <section className="countdown-panel" aria-label="Session timer">
-            <div className="timer-digits" role="timer">{formatTime(timeLeft)}</div>
-            <div className="current-vibe"><Music size={16} /><span>{result.prompt}</span></div>
-            {connected && playbackReady && <div className="now-playing" aria-live="polite">
-              {nowPlaying?.album?.images?.[0]?.url && <img src={nowPlaying.album.images[0].url} alt="" />}
-              <div><span className="now-playing-label">Now playing</span>
-                <strong>{nowPlaying ? nowPlaying.name : 'Nothing is playing'}</strong>
-                {nowPlaying && <small>{nowPlaying.artists?.map(artist => artist.name).join(', ')}</small>}
+
+        {!isConfigured() && <p className="setup-notice">Add your Spotify Client ID to <code>frontend/.env.local</code> and restart the webpage.</p>}
+        {error && <p className="app-error" role="alert">{error}</p>}
+
+        {!deadline && !completed ? (
+          <div className="setup">
+            <h1>Find your<br /><span>flow state.</span></h1>
+
+            <div className="duration">
+              <button className="minute-adjust" disabled={disabled} onClick={() => setMinutes((m) => Math.max(1, Number(m || 1) - 5))} aria-label="Subtract five minutes">−</button>
+              <input aria-label="Session length in minutes" type="number" min="1" max="240" value={minutes} disabled={disabled}
+                onChange={(e) => setMinutes(e.target.value === '' ? '' : Math.min(240, Math.max(1, Number(e.target.value))))}
+                onBlur={() => { if (!minutes || Number(minutes) < 1) setMinutes(40); }} />
+              <span className="minute-label">MIN</span>
+              <button className="minute-adjust" disabled={disabled} onClick={() => setMinutes((m) => Math.min(240, Number(m || 0) + 5))} aria-label="Add five minutes">+</button>
+            </div>
+
+            <div className="activity-input">
+              <label htmlFor="activity">WHAT ARE YOU DOING?</label>
+              <input id="activity" type="text" value={activity} disabled={disabled} maxLength={100}
+                onChange={(e) => setActivity(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && generate(e)}
+                placeholder="e.g. studying, drawing..." />
+            </div>
+
+            <div className="vibe-input">
+              <Music2 size={19} aria-hidden="true" />
+              <input aria-label="Describe your music vibe" value={vibe} disabled={disabled} maxLength={140}
+                onChange={(e) => setVibe(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && generate(e)}
+                placeholder="What's the vibe?" />
+              <button type="button" onClick={randomVibe} disabled={disabled} aria-label="Random vibe" title="Surprise me"><Shuffle size={17} /></button>
+            </div>
+
+            <div className="variety-input">
+              <label htmlFor="song-variety">HOW ADVENTUROUS?</label>
+              <select id="song-variety" value={pickProbability} disabled={disabled} onChange={(e) => setPickProbability(Number(e.target.value))}>
+                <option value="25">Stay close to the theme</option>
+                <option value="50">Balanced mix</option>
+                <option value="75">Explore more</option>
+                <option value="100">Maximum variety</option>
+              </select>
+            </div>
+
+            <button className="start-button" onClick={generate} disabled={disabled || !connected}>
+              {busy === 'generate' ? <>{progress || 'Making magic...'} <Loader2 size={17} className="loading-icon" /></> : <>Let’s go! <span className="play-icon"><Play size={17} fill="currentColor" /></span></>}
+            </button>
+
+            {result && <section className="results-panel" aria-label="Generated playlist">
+              <div className="results-heading"><strong>Your mix</strong><span>{result.tracks.length} tracks · {formatTime(result.totalMs / 1000)}</span></div>
+              <p className="results-prompt">“{result.prompt}” · {result.minutes} min</p>
+              <ol className="generated-tracks">{result.tracks.map((track) => <li key={track.uri}>
+                {track.image ? <img src={track.image} alt="" width="34" height="34" loading="lazy" /> : <Music2 size={22} aria-hidden="true" />}
+                <div><a href={track.url} target="_blank" rel="noreferrer">{track.title}</a><small>{track.artists}</small></div>
+                <span>{formatTime(track.durationMs / 1000)}</span>
+              </li>)}</ol>
+              {result.missing > 0 && <p className="results-prompt">{result.missing} tracks lacked a usable Spotify ID or duration.</p>}
+              {!saved ? <button className="save-button" onClick={save} disabled={disabled || !connected}>
+                {busy === 'save' ? <>Saving… <Loader2 size={15} className="loading-icon" /></> : 'Save private playlist'}
+              </button> : <a className="playlist-link" href={saved.url} target="_blank" rel="noreferrer"><Check size={14} /> Open playlist in Spotify <ExternalLink size={14} /></a>}
+              <button className="start-button play-session-button" onClick={startSession} disabled={disabled || !connected || !playbackReady}>
+                {busy === 'start' ? <>Starting playback… <Loader2 size={15} className="loading-icon" /></> : <>Play music & start timer <Play size={15} fill="currentColor" /></>}
+              </button>
+            </section>}
+          </div>
+        ) : deadline ? (
+          <div className="active">
+            <div className="timer-ring" style={{ '--progress': `${progressPercent}%` }}>
+              <div className="timer-inner">
+                <span className="tiny-label">YOUR TIME</span>
+                <div className="digits">{formatTime(timeLeft)}</div>
+                <span className="tiny-vibe">✦ JUST KEEP VIBING ✦</span>
+              </div>
+            </div>
+            {(result?.activity || activity) && <p className="activity-display">{result?.activity || activity}</p>}
+
+            {connected && playbackReady && <div className="now-playing-card" aria-live="polite">
+              <div className="now-playing-icon"><Disc size={20} className={currentTrack ? 'spin-slow' : ''} /></div>
+              <div className="now-playing-info">
+                <span className="now-playing-label">NOW PLAYING</span>
+                <p className="track-title">{currentTrack?.name || 'Nothing is playing'}</p>
+                <p className="track-artist">{currentTrack?.artists?.map((artist) => artist.name).join(', ') || 'Your Spotify session'}</p>
               </div>
             </div>}
-            <button className="btn btn-stop" onClick={() => { setDeadline(null); setTimeLeft(0); }}>Stop timer <Square size={14} /></button>
-          </section>
+
+            {saved && <a className="playlist-link" href={saved.url} target="_blank" rel="noreferrer">Open playlist ↗</a>}
+            <button className="stop-button" onClick={() => { setDeadline(null); setTimeLeft(0); setCurrentTrack(null); }}><Square size={13} fill="currentColor" /> Stop</button>
+          </div>
         ) : (
-          <form className="form-group" onSubmit={generate}>
-            {completed && <p className="success" role="status">Your session is complete.</p>}
-            <label className="input-label" htmlFor="minutes">How long do you need?</label>
-            <div className="number-input-wrapper">
-              <input id="minutes" type="number" min="1" max="240" step="1" required disabled={disabled}
-                value={inputMinutes} onChange={e => setInputMinutes(e.target.value)} className="input-field number-input" />
-              <span className="input-suffix">minutes</span>
-            </div>
-            <label className="input-label" htmlFor="vibe">Describe your mood / vibe</label>
-            <input id="vibe" type="text" required minLength="2" maxLength="240" disabled={disabled}
-              value={inputVibe} onChange={e => setInputVibe(e.target.value)}
-              placeholder="e.g., rainy evening, love and nostalgia" className="input-field wide-input" />
-            <label className="input-label" htmlFor="song-variety">How adventurous should the mix be?</label>
-            <select id="song-variety" className="input-field wide-input" disabled={disabled}
-              value={pickProbability} onChange={e => setPickProbability(Number(e.target.value))}
-              aria-describedby="song-variety-help">
-              <option value="25">Stay close to the theme</option>
-              <option value="50">Balanced mix</option>
-              <option value="75">Explore more</option>
-              <option value="100">Maximum variety</option>
-            </select>
-            <small id="song-variety-help" className="notice">More adventurous mixes include songs less similar to your mood.</small>
-            <button type="submit" disabled={disabled || !connected} className="btn btn-start">
-              {busy === 'generate' ? <>Finding your songs <Loader2 size={18} className="spinner" /></> : <>Find my playlist <Music size={18} /></>}
-            </button>
-            {progress && <p className="notice" role="status">{progress}</p>}
-          </form>
+          <div className="finished">
+            <div className="party-emoji">🎉</div>
+            <h1>You did it<span>!</span></h1>
+            <p>Look at you go ✨</p>
+            {(result?.activity || activity) && <p className="activity-display">{result?.activity || activity} complete!</p>}
+            {saved && <a className="playlist-link" href={saved.url} target="_blank" rel="noreferrer">Keep the music going ↗</a>}
+            <button className="start-button" onClick={reset}>Again? <span className="play-icon"><RotateCcw size={17} /></span></button>
+          </div>
         )}
-        {result && <section className="results" aria-label="Your playlist">
-          <div className="result-heading"><h2>Your mix</h2><span>{result.tracks.length} songs · {formatTime(result.totalMs / 1000)}</span></div>
-          <p className="notice">“{result.prompt}” · {result.minutes}-minute target. Searched {result.catalogTracks} catalogue songs.</p>
-          {result.catalogTracks < 100 && <p className="notice">Only {result.catalogTracks} songs are loaded. Run the data loader and restart the API.</p>}
-          {result.missing > 0 && <p className="notice">{result.missing} tracks did not have a usable dataset ID or duration.</p>}
-          <ol className="track-list">{result.tracks.map(track => <li key={track.uri}>
-            {track.image ? <img src={track.image} alt="" width="44" height="44" loading="lazy" /> : <Music size={28} aria-hidden="true" />}
-            <div><a href={track.url} target="_blank" rel="noreferrer">{track.title}</a><small>{track.artists}</small></div>
-            <span>{formatTime(track.durationMs / 1000)}</span>
-          </li>)}</ol>
-          {!saved ? <button className="btn btn-spotify full-width" onClick={save} disabled={disabled || !connected}>
-            {busy === 'save' ? <>Saving… <Loader2 size={16} className="spinner" /></> : 'Save private playlist to Spotify'}
-          </button> : <>
-            <a className="saved-link" href={saved.url} target="_blank" rel="noreferrer"><Check size={16} /> Open playlist in Spotify <ExternalLink size={15} /></a>
-          </>}
-          {!deadline && <button className="btn btn-start full-width start-timer" disabled={disabled || !connected || !playbackReady} onClick={startSession}>
-            {busy === 'start' ? <>Starting playback… <Loader2 size={16} className="spinner" /></> : <>Play music & start {result.minutes}-minute timer <Play size={16} /></>}
-          </button>}
-        </section>}
-      </div>
+
+        <footer>MADE OF MUSIC &amp; MAGIC <span>♥</span></footer>
+      </section>
     </main>
   );
 }
