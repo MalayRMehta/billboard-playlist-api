@@ -12,6 +12,10 @@ function stored(key) {
   try { return JSON.parse(sessionStorage.getItem(key) || 'null'); } catch { return null; }
 }
 export const isConnected = () => Boolean(stored(TOKEN_KEY)?.access_token);
+export const hasPlaybackScopes = () => {
+  const scopes = new Set((stored(TOKEN_KEY)?.scope || '').split(/\s+/));
+  return scopes.has('user-read-playback-state') && scopes.has('user-modify-playback-state');
+};
 export function disconnect() {
   authGeneration++;
   sessionStorage.removeItem(TOKEN_KEY);
@@ -23,7 +27,7 @@ export function disconnect() {
 function base64url(bytes) {
   return btoa(String.fromCharCode(...bytes)).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 }
-export async function connect() {
+export async function connect(forceConsent = false) {
   if (!isConfigured()) throw new Error('Add your Spotify Client ID to .env.local, then restart the webpage.');
   if (location.origin !== new URL(REDIRECT_URI).origin)
     throw new Error(`Open this app at ${new URL(REDIRECT_URI).origin} before connecting Spotify.`);
@@ -32,8 +36,10 @@ export async function connect() {
   const challenge = base64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier))));
   sessionStorage.setItem(AUTH_KEY, JSON.stringify({ verifier, state, created: Date.now() }));
   const params = new URLSearchParams({ client_id: CLIENT_ID, response_type: 'code',
-    redirect_uri: REDIRECT_URI, scope: 'playlist-modify-private', state,
+    redirect_uri: REDIRECT_URI,
+    scope: 'playlist-modify-private user-read-playback-state user-modify-playback-state', state,
     code_challenge_method: 'S256', code_challenge: challenge });
+  if (forceConsent) params.set('show_dialog', 'true');
   location.assign(`https://accounts.spotify.com/authorize?${params}`);
 }
 async function tokenRequest(params, previous = null) {
@@ -51,7 +57,8 @@ async function tokenRequest(params, previous = null) {
     throw new Error('Spotify login expired or was rejected. Connect Spotify again and check the callback URL.');
   }
   if (generation !== authGeneration) throw new Error('Spotify was disconnected.');
-  const tokens = { ...data, refresh_token: data.refresh_token || previous?.refresh_token,
+  const tokens = { ...data, scope: data.scope || previous?.scope || '',
+    refresh_token: data.refresh_token || previous?.refresh_token,
     expires_at: Date.now() + Number(data.expires_in || 3600) * 1000 };
   sessionStorage.setItem(TOKEN_KEY, JSON.stringify(tokens));
   return tokens.access_token;
@@ -109,7 +116,7 @@ export async function spotifyRequest(path, options = {}, retry = true) {
     throw new Error(`Spotify is busy. Wait ${seconds} seconds before trying again.`);
   }
   if (response.status === 403)
-    throw new Error('Spotify denied access. Check the app owner’s Premium subscription, your app’s allowed users, and reconnect Spotify.');
+    throw new Error('Spotify denied access. Check your app’s allowed users, permissions, and subscription.');
   if (!response.ok) throw new Error(`Spotify request failed (${response.status}). Please try again.`);
   if (response.status === 204) return null;
   return response.json();
@@ -138,4 +145,28 @@ export async function savePlaylist(tracks, prompt, targetMinutes) {
     throw new Error(`${error.message} The playlist was created; click Save again to finish adding songs.`);
   }
   return { id: playlist.id, url: `https://open.spotify.com/playlist/${playlist.id}` };
+}
+
+export async function startPlaylistPlayback(playlistId) {
+  const { devices = [] } = await spotifyRequest('/me/player/devices');
+  const device = devices.find(item => item.is_active && !item.is_restricted && item.id) ||
+    devices.find(item => !item.is_restricted && item.id);
+  if (!device) throw new Error('Open Spotify on a device, then try starting the timer again.');
+
+  try {
+    const query = new URLSearchParams({ device_id: device.id });
+    await spotifyRequest(`/me/player/play?${query}`, {
+      method: 'PUT', body: JSON.stringify({ context_uri: `spotify:playlist:${playlistId}` }),
+    });
+  } catch (error) {
+    if (error.message.includes('Spotify denied access.'))
+      throw new Error('Starting Spotify playback requires Premium and playback permission for this app.');
+    if (error.message.includes('(404)'))
+      throw new Error('Spotify could not start playback on that device. Open Spotify and try again.');
+    throw error;
+  }
+}
+
+export async function getCurrentlyPlaying() {
+  return spotifyRequest('/me/player/currently-playing');
 }

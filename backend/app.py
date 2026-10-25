@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import random
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
@@ -22,6 +23,7 @@ def refresh_catalogue() -> None:
 class CandidateRequest(BaseModel):
     prompt: str = Field(min_length=2, max_length=240)
     target_minutes: int = Field(ge=1, le=240)
+    pick_probability: int = Field(default=50, ge=0, le=100)
 
 
 def score_track(track: dict[str, Any], lyric_similarity: float) -> dict[str, Any]:
@@ -35,32 +37,44 @@ def score_track(track: dict[str, Any], lyric_similarity: float) -> dict[str, Any
     }
 
 
-def score_candidates(vector: Any, target_minutes: int) -> list[dict[str, Any]]:
+def score_candidates(vector: Any, target_minutes: int, pick_probability: int) -> list[dict[str, Any]]:
     target_ms = target_minutes * 60_000
     expected_tracks = (target_minutes * 60 + 15 + 149) // 150
     batch_size = expected_tracks * 2
     rows: list[dict[str, Any]] = []
+    selected_ids: set[str] = set()
+    total_ms = 0
     cursor: tuple[float, str] | None = None
+    chance = pick_probability / 100
 
-    while True:
+    while len(rows) < 100:
         batch = catalogue_db.nearest_tracks(vector, limit=batch_size, cursor=cursor)
         if not batch:
             break
-        rows.extend(score_track(result["track"], result["similarity"]) for result in batch)
         cursor = batch[-1]["cursor"]
 
-        total_ms = 0
-        selected_count = 0
-        for track in sorted(rows, key=lambda row: row["relevance"], reverse=True):
+        for result in batch:
+            track = score_track(result["track"], result["similarity"])
+            track_id = str(track["trackId"])
             duration_ms = track["durationMs"]
-            if duration_ms > 0 and total_ms + duration_ms <= target_ms:
+            if (track_id in selected_ids or not isinstance(duration_ms, (int, float))
+                    or duration_ms <= 0 or total_ms + duration_ms > target_ms):
+                continue
+            leaves_ms = target_ms - total_ms - duration_ms
+            selection_chance = chance
+            if 30_000 <= leaves_ms <= 110_000:
+                selection_chance *= 0.1
+            if leaves_ms <= 10_000 or random.random() < selection_chance:
+                rows.append(track)
+                selected_ids.add(track_id)
                 total_ms += duration_ms
-                selected_count += 1
-            if total_ms >= target_ms - 30_000 or selected_count == 100:
+            if total_ms >= target_ms - 30_000 or len(rows) == 100:
                 break
-        if total_ms >= target_ms - 30_000 or selected_count == 100:
+
+        if total_ms >= target_ms - 30_000 or len(rows) == 100:
             break
 
+    rows.sort(key=lambda row: row["relevance"], reverse=True)
     return rows
 
 
@@ -111,7 +125,7 @@ def candidates(request: CandidateRequest) -> dict[str, Any]:
     if len(prompt) < 2:
         raise HTTPException(status_code=422, detail="Enter at least two non-space characters")
     vector = encoder.encode(prompt, convert_to_numpy=True, normalize_embeddings=True)
-    rows = score_candidates(vector, request.target_minutes)
+    rows = score_candidates(vector, request.target_minutes, request.pick_probability)
     return {"prompt": prompt, "catalogTracks": len(catalog), "candidates": rows}
 
 

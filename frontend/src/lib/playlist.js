@@ -1,8 +1,10 @@
-export async function rankCandidates(prompt, targetMinutes) {
+export async function rankCandidates(prompt, targetMinutes, pickProbability = 50) {
   let response;
   try {
     response = await fetch('/api/candidates', { method: 'POST',
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ prompt, target_minutes: targetMinutes }),
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        prompt, target_minutes: targetMinutes, pick_probability: pickProbability,
+      }),
       signal: AbortSignal.timeout(130000) });
   } catch { throw new Error('Could not reach the playlist service. Check that Python is running.'); }
   const body = await response.json().catch(() => ({}));
@@ -33,7 +35,7 @@ export function fitPlaylist(tracks, minutes) {
   const used = new Set();
   let totalMs = 0;
   const selected = [];
-  // Theme relevance takes priority; time is a hard upper bound. Keep milliseconds.
+  // The backend selects candidate tracks randomly and fits them inside the time budget.
   for (const track of [...tracks].sort((a, b) => b.relevance - a.relevance)) {
     if (used.has(track.uri) || !Number.isFinite(track.durationMs) || track.durationMs <= 0 ||
         totalMs + track.durationMs > budget) continue;
