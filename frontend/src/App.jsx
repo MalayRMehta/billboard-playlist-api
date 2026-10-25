@@ -193,8 +193,6 @@ export default function App() {
             {busy === 'save' ? <>Saving… <Loader2 size={16} className="spinner" /></> : 'Save private playlist to Spotify'}
           </button> : <>
             <a className="saved-link" href={saved.url} target="_blank" rel="noreferrer"><Check size={16} /> Open playlist in Spotify <ExternalLink size={15} /></a>
-            <iframe title="Your Spotify playlist" src={`https://open.spotify.com/embed/playlist/${saved.id}`}
-              width="100%" height="352" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" />
           </>}
           {!deadline && <button className="btn btn-start full-width start-timer" disabled={disabled || !connected || !playbackReady} onClick={startSession}>
             {busy === 'start' ? <>Starting playback… <Loader2 size={16} className="spinner" /></> : <>Play music & start {result.minutes}-minute timer <Play size={16} /></>}
