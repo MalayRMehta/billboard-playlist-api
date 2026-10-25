@@ -48,22 +48,6 @@ def create_database() -> None:
     raise RuntimeError(f"Could not connect to catalogue database: {last_error}")
 
 
-def upsert_tracks(tracks: list[dict[str, Any]], vectors: Any) -> None:
-    records = [
-        (track["track_id"], track["track_genre"], Jsonb(track), vector)
-        for track, vector in zip(tracks, vectors, strict=True)
-    ]
-    with connect() as connection:
-        with connection.cursor() as cursor:
-            cursor.executemany(
-                """INSERT INTO tracks (track_id, genre, payload, embedding)
-                   VALUES (%s, %s, %s, %s)
-                   ON CONFLICT (track_id, genre) DO UPDATE
-                   SET payload = EXCLUDED.payload, embedding = EXCLUDED.embedding""",
-                records,
-            )
-
-
 def replace_tracks(tracks: list[dict[str, Any]], vectors: Any) -> None:
     records = [
         (track["track_id"], track["track_genre"], Jsonb(track), vector)
@@ -120,14 +104,36 @@ def get_track(track_id: str) -> list[dict[str, Any]]:
     return [row["payload"] for row in rows]
 
 
-def nearest_tracks(vector: Any, limit: int = 1000) -> list[dict[str, Any]]:
+def nearest_tracks(
+    vector: Any,
+    limit: int = 1000,
+    cursor: tuple[float, str] | None = None,
+) -> list[dict[str, Any]]:
     with connect() as connection:
-        rows = connection.execute(
-            """SELECT payload, 1 - (embedding <=> %s) AS similarity
-               FROM tracks ORDER BY embedding <=> %s LIMIT %s""",
-            (vector, vector, limit),
-        ).fetchall()
-    return [{"track": row["payload"], "similarity": float(row["similarity"])} for row in rows]
+        if cursor is None:
+            rows = connection.execute(
+                """SELECT payload, embedding <=> %s AS distance
+                   FROM tracks ORDER BY distance, track_id LIMIT %s""",
+                (vector, limit),
+            ).fetchall()
+        else:
+            last_distance, last_track_id = cursor
+            rows = connection.execute(
+                """SELECT payload, embedding <=> %s AS distance
+                   FROM tracks
+                   WHERE (embedding <=> %s) > %s
+                      OR ((embedding <=> %s) = %s AND track_id > %s)
+                   ORDER BY distance, track_id LIMIT %s""",
+                (vector, vector, last_distance, vector, last_distance, last_track_id, limit),
+            ).fetchall()
+    return [
+        {
+            "track": row["payload"],
+            "similarity": 1 - float(row["distance"]),
+            "cursor": (float(row["distance"]), row["payload"]["track_id"]),
+        }
+        for row in rows
+    ]
 
 
 def all_tracks() -> list[dict[str, Any]]:

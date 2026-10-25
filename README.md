@@ -42,5 +42,4 @@ Check the first three dataset IDs against Spotify with `SPOTIFY_ACCESS_TOKEN=...
 - `GET /api/tracks?page=0&size=20&genre=rock&q=love`
 - `GET /api/tracks/{trackId}`
 - `POST /api/candidates` with `{"prompt":"rainy evening","target_minutes":30}`
-- `POST /api/playlists` with `{"prompt":"rainy evening","target_minutes":30}`
 - `GET /health`

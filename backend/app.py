@@ -19,15 +19,49 @@ def refresh_catalogue() -> None:
     catalog = catalogue_db.all_tracks()
 
 
-class PlaylistRequest(BaseModel):
-    prompt: str = Field(min_length=2, max_length=240, examples=["rainy evening, mellow indie"])
-    target_minutes: int = Field(ge=1, le=240, examples=[30])
-    max_tracks: int = Field(default=100, ge=1, le=100)
-
-
 class CandidateRequest(BaseModel):
     prompt: str = Field(min_length=2, max_length=240)
     target_minutes: int = Field(ge=1, le=240)
+
+
+def score_track(track: dict[str, Any], lyric_similarity: float) -> dict[str, Any]:
+    """Build a candidate and its score; combine other track signals here as needed."""
+    return {
+        "trackId": track["track_id"],
+        "title": track["track_name"],
+        "artists": track["artists"],
+        "durationMs": track["duration_ms"],
+        "relevance": round(float(lyric_similarity), 6),
+    }
+
+
+def score_candidates(vector: Any, target_minutes: int) -> list[dict[str, Any]]:
+    target_ms = target_minutes * 60_000
+    expected_tracks = (target_minutes * 60 + 15 + 149) // 150
+    batch_size = expected_tracks * 2
+    rows: list[dict[str, Any]] = []
+    cursor: tuple[float, str] | None = None
+
+    while True:
+        batch = catalogue_db.nearest_tracks(vector, limit=batch_size, cursor=cursor)
+        if not batch:
+            break
+        rows.extend(score_track(result["track"], result["similarity"]) for result in batch)
+        cursor = batch[-1]["cursor"]
+
+        total_ms = 0
+        selected_count = 0
+        for track in sorted(rows, key=lambda row: row["relevance"], reverse=True):
+            duration_ms = track["durationMs"]
+            if duration_ms > 0 and total_ms + duration_ms <= target_ms:
+                total_ms += duration_ms
+                selected_count += 1
+            if total_ms >= target_ms - 30_000 or selected_count == 100:
+                break
+        if total_ms >= target_ms - 30_000 or selected_count == 100:
+            break
+
+    return rows
 
 
 @app.on_event("startup")
@@ -77,71 +111,7 @@ def candidates(request: CandidateRequest) -> dict[str, Any]:
     if len(prompt) < 2:
         raise HTTPException(status_code=422, detail="Enter at least two non-space characters")
     vector = encoder.encode(prompt, convert_to_numpy=True, normalize_embeddings=True)
-    rows = []
-    expected_tracks = (request.target_minutes * 60 + 149) // 150
-    candidate_limit = expected_tracks * 2
-    for result in catalogue_db.nearest_tracks(vector, limit=candidate_limit):
-        track = result["track"]
-        similarity = result["similarity"]
-        rows.append({"trackId": track["track_id"], "title": track["track_name"],
-                     "artists": track["artists"], "genre": track["track_genre"],
-                     "durationMs": track["duration_ms"],
-                     "relevance": round(float(similarity), 6),
-                     "matchSource": "lyrics"})
-    rows.sort(key=lambda row: row["relevance"], reverse=True)
+    rows = score_candidates(vector, request.target_minutes)
     return {"prompt": prompt, "catalogTracks": len(catalog), "candidates": rows}
 
 
-@app.post("/api/playlists")
-def create_playlist(request: PlaylistRequest) -> dict[str, Any]:
-    if encoder is None:
-        raise HTTPException(status_code=503, detail="Playlist index is still starting")
-    target_seconds = request.target_minutes * 60
-    query_vector = encoder.encode(request.prompt, convert_to_numpy=True, normalize_embeddings=True)
-    expected_tracks = (request.target_minutes * 60 + 149) // 150
-    matches = [
-        {"track": result["track"], "relevance": result["similarity"]}
-        for result in catalogue_db.nearest_tracks(query_vector, limit=expected_tracks * 2)
-    ]
-    if not matches:
-        return {
-            "prompt": request.prompt,
-            "targetMinutes": request.target_minutes,
-            "totalDurationSeconds": 0,
-            "tracks": [],
-            "message": "No songs are loaded in the catalogue.",
-        }
-    selected: list[dict[str, Any]] = []
-    selected_ids: set[str] = set()
-    total_seconds = 0
-    remaining = target_seconds
-    for match in matches:
-        row = match["track"]
-        track_id = str(row["track_id"])
-        if track_id in selected_ids:
-            continue
-        duration = max(1, int(row["duration_ms"]) // 1000)
-        if duration > remaining:
-            continue
-        score = float(match["relevance"])
-        selected.append({
-            "trackId": track_id,
-            "title": row.get("track_name"),
-            "artists": row.get("artists"),
-            "genre": row.get("track_genre"),
-            "durationSeconds": duration,
-            "relevance": round(score, 4),
-        })
-        selected_ids.add(track_id)
-        total_seconds += duration
-        remaining -= duration
-        if not remaining or len(selected) >= request.max_tracks:
-            break
-    return {
-        "prompt": request.prompt,
-        "targetMinutes": request.target_minutes,
-        "totalDurationSeconds": total_seconds,
-        "durationMinutes": round(total_seconds / 60, 1),
-        "tracks": selected,
-        "message": "Matched using lyric embeddings. Song lengths come from the Spotify dataset.",
-    }

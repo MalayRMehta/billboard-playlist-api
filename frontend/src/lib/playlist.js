@@ -18,7 +18,7 @@ export async function resolveCandidates(candidates, onProgress = () => {}) {
     const trackId = String(candidate.trackId || '').trim();
     if (trackId && Number(candidate.durationMs) > 0) {
       console.info('Using dataset Spotify track ID:', trackId);
-      resolved.push({ ...candidate, spotifyId: trackId, uri: `spotify:track:${trackId}`,
+      resolved.push({ ...candidate, uri: `spotify:track:${trackId}`,
         durationMs: Number(candidate.durationMs),
         url: `https://open.spotify.com/track/${trackId}`, image: null });
     } else missing++;
