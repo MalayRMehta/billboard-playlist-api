@@ -34,3 +34,5 @@ backend/*.jar
 **/.venv*/
 **/__pycache__/
 **/.cache/
+
+data/spotify_songs.csv

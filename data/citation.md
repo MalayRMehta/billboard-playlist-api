@@ -1,0 +1,1 @@
+We used the following dataset from kaggle: https://www.kaggle.com/datasets/imuhammad/audio-features-and-lyrics-of-spotify-songs
